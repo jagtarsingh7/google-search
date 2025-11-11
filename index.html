@@ -97,33 +97,56 @@
 
   <!-- Firebase: log each search to Firestore -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
-    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
+  import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 
-    // --- USE YOUR CONFIG (replace if needed) ---
-    const firebaseConfig = {
-      apiKey: "AIzaSyBmR-D0xa8c_wh2vS7uPw1FwL_7-fN8Xjo",
-      authDomain: "hope-6fe19.firebaseapp.com",
-      projectId: "hope-6fe19",
-      storageBucket: "hope-6fe19.firebasestorage.app",
-      messagingSenderId: "605032966039",
-      appId: "1:605032966039:web:122b19f529e5db9ee7c6d2",
-      measurementId: "G-S8G7B4EY5T"
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyBmR-D0xa8c_wh2vS7uPw1FwL_7-fN8Xjo",
+    authDomain: "hope-6fe19.firebaseapp.com",
+    projectId: "hope-6fe19",
+    storageBucket: "hope-6fe19.firebasestorage.app",
+    messagingSenderId: "605032966039",
+    appId: "1:605032966039:web:122b19f529e5db9ee7c6d2",
+    measurementId: "G-S8G7B4EY5T"
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const db  = getFirestore(app);
-    const auth = getAuth(app);
-    signInAnonymously(auth).catch(()=>{});
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
 
-    window.logSearchToFirestore = async function(text){
-      const clean = (text || "").toString().slice(0,300);
-      if(!clean) return;
-      try { await addDoc(collection(db,"searches"), { text: clean, ua: navigator.userAgent||"", ts: serverTimestamp() }); }
-      catch(e){ console.warn("Firestore log failed:", e); }
-    };
-  </script>
+  // Anonymous authentication with clear logging
+  signInAnonymously(auth)
+    .then(() => console.log('✅ Firebase: Signed in anonymously.'))
+    .catch(error => console.error('❌ Firebase Auth Error:', error));
+
+  // Log user info when ready
+  onAuthStateChanged(auth, (user) => {
+    if (user) console.log('👤 Firebase user UID:', user.uid);
+  });
+
+  // Firestore write with better logs
+  window.logSearchToFirestore = async function(text) {
+    const clean = (text || '').toString().slice(0, 300);
+    if (!clean) return;
+
+    try {
+      const ref = await addDoc(collection(db, 'searches'), {
+        text: clean,
+        ua: navigator.userAgent || '',
+        ts: serverTimestamp()
+      });
+      console.log('✅ Firestore: Logged search:', clean, '→ doc ID:', ref.id);
+    } catch (e) {
+      console.error('❌ Firestore write failed:', e);
+    }
+  };
+</script>
+
+<script>
+  window.addEventListener('error', e => console.error('Window error:', e.message));
+  window.addEventListener('unhandledrejection', e => console.error('Unhandled promise rejection:', e.reason));
+</script>
 
   <script>
     // --- Funny rotating recommendations (no repeat until all used) ---
