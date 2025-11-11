@@ -261,12 +261,31 @@
       if (!win) return alert('Pop-up blocked. Allow pop-ups for this site.');
       const safeQ = (q||'').replace(/[&<>]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[s]));
       const msg = nextRec(q);
-      const html = '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Result</title>'+
-        '<style>body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:-apple-system,BlinkMacSystemFont,\\'Segoe UI\\',Roboto,Helvetica,Arial,sans-serif;background:#fff;color:#202124}'+
-        '.box{text-align:center;padding:28px} h1{font-size:clamp(28px,6vw,46px);margin:0 0 10px} p{color:#5f6368;margin:4px 0}'+
-        '.rec{margin-top:10px;font-size:18px}</style></head>'+
-        '<body><div class="box"><h1>Here’s my take 💙</h1><p>You searched: “'+safeQ+'”</p><p class="rec">My recommendation: '+msg+'</p></div></body></html>';
-      win.document.open(); win.document.write(html); win.document.close();
+      const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Result</title>
+  <style>
+    body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:#fff;color:#202124}
+    .box{text-align:center;padding:28px}
+    h1{font-size:clamp(28px,6vw,46px);margin:0 0 10px}
+    p{color:#5f6368;margin:4px 0}
+    .rec{margin-top:10px;font-size:18px}
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>Here’s my take 💙</h1>
+    <p>You searched: “${safeQ}”</p>
+    <p class="rec">My recommendation: ${msg}</p>
+  </div>
+</body>
+</html>`;
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
     }
 
     function status(msg){ if(statusLine) statusLine.textContent = msg; console.log('[status]', msg); }
