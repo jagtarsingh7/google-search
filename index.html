@@ -76,6 +76,10 @@
         <button type="button" id="lucky">I'm Feeling Lucky</button>
       </div>
       <div class="hint">Type anything. I’ll echo it and give a playful recommendation 💘</div>
+      <div class="hint" id="statusLine" aria-live="polite"></div>
+      <div style="margin-top:8px">
+        <button type="button" id="testWrite" style="font-size:12px;border:1px solid #e5e7eb;padding:6px 10px;border-radius:6px;background:#fff;cursor:pointer">Run Firestore test write</button>
+      </div>
     </form>
   </main>
 
@@ -124,6 +128,8 @@
   onAuthStateChanged(auth, (user) => {
     if (user) console.log('👤 Firebase user UID:', user.uid);
   });
+
+  console.log('Firebase init complete for project:', firebaseConfig.projectId, 'authDomain:', firebaseConfig.authDomain);
 
   // Firestore write with better logs
   window.logSearchToFirestore = async function(text) {
@@ -215,19 +221,39 @@
     const recommendation = document.getElementById('recommendation');
     const closeModal = document.getElementById('closeModal');
     const openNewPageBtn = document.getElementById('openNewPage');
+    const statusLine = document.getElementById('statusLine');
+    const testWriteBtn = document.getElementById('testWrite');
 
     function showResult(q){
-      if(!q || !q.trim()) { input.focus(); return; }
+      const text = (q||'').trim();
+      if(!text) { input.focus(); return; }
 
-      // Firestore logging
-      if (window.logSearchToFirestore) { window.logSearchToFirestore(q); }
+      // Firestore logging (non-blocking)
+      if (window.logSearchToFirestore) {
+        window.logSearchToFirestore(text)
+          .then(() => status('Saved to Firestore'))
+          .catch(err => status('Firestore error: ' + (err && err.message || 'see console')));
+      } else {
+        status('Firestore not ready (window.logSearchToFirestore missing)');
+      }
 
       // Fill modal
-      youSearched.textContent = `You searched: “${q.trim()}”`;
-      recommendation.textContent = `My recommendation: ${nextRec(q)}`;
+      youSearched.textContent = `You searched: “${text}”`;
+      recommendation.textContent = `My recommendation: ${nextRec(text)}`;
 
-      dialog.showModal();
-      confettiBurst(); // 🎉
+      try {
+        if (dialog && typeof dialog.showModal === 'function') {
+          dialog.showModal();
+          confettiBurst();
+          status('Modal opened');
+        } else {
+          throw new Error('dialog.showModal not available');
+        }
+      } catch (err) {
+        console.warn('dialog.showModal failed, using fallback page:', err);
+        status('Opening fallback page');
+        openNewPage(text);
+      }
     }
 
     function openNewPage(q){
@@ -241,6 +267,24 @@
         '.rec{margin-top:10px;font-size:18px}</style></head>'+
         '<body><div class="box"><h1>Here’s my take 💙</h1><p>You searched: “'+safeQ+'”</p><p class="rec">My recommendation: '+msg+'</p></div></body></html>';
       win.document.open(); win.document.write(html); win.document.close();
+    }
+
+    function status(msg){ if(statusLine) statusLine.textContent = msg; console.log('[status]', msg); }
+
+    if (testWriteBtn) {
+      testWriteBtn.addEventListener('click', async () => {
+        try {
+          if (window.logSearchToFirestore) {
+            await window.logSearchToFirestore('diagnostic test');
+            status('Diagnostic write OK');
+          } else {
+            status('Diagnostic: Firestore logger not available');
+          }
+        } catch (e) {
+          status('Diagnostic write failed');
+          console.error('Diagnostic write failed:', e);
+        }
+      });
     }
 
     form.addEventListener('submit', e => { e.preventDefault(); showResult(input.value); });
