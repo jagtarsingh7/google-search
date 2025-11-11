@@ -80,7 +80,7 @@
   <dialog id="resultDialog">
     <div class="modal">
       <div class="modal-header">
-        <h1>not-google chat <span class="heart">💙</span></h1>
+        <h1>chat with someone who loves you <span class="heart">💙</span></h1>
         <button id="closeModal" title="Close" style="border:0;background:transparent;font-size:18px;cursor:pointer">✖</button>
       </div>
       <div id="chat" class="chat" aria-live="polite"></div>
@@ -151,39 +151,82 @@
   <script>
     // Pools
     const POOLS = {
-      romantic: [
-        "Plot twist: your heart already decided. It whispered ‘yes’.",
-        "If smiles were votes, ‘yes’ just won by a landslide.",
-        "I checked destiny’s logs—status: ‘YES confirmed’.",
-        "Today’s forecast: 100% chance of YES showers."
+      persuade: [
+        "Say yes. Your smile already did.",
+        "Yes looks perfect on you.",
+        "Go on—say yes. It suits your heart.",
+        "Tiny hint: yes is the right kind of brave.",
+        "Just say yes. The world gets softer when you do.",
+        "Yes now, thank yourself later.",
+        "A gentle nudge → yes.",
+        "Your heartbeat spelled Y‑E‑S.",
+        "Be kind to your future—you’ll say yes.",
+        "Yes. Because this story deserves it.",
+        "Choose yes; let the universe catch up.",
+        "Yes is the chapter we’re all waiting for.",
+        "If destiny had a button, it’s ‘yes’.",
+        "Best answer? Yes. Best timing? Now.",
+        "This is your sign: say yes.",
+        "You + yes = everything good.",
+        "Permission to proceed with yes: granted.",
+        "Say yes—watch the butterflies line up.",
+        "Yes. Simple, sweet, spectacular.",
+        "Let’s call it: yes." 
       ],
-      tease: [
-        "That ‘maybe’ sounds like ‘yes’ wearing pajamas.",
-        "Auto-correct changed ‘no’ → ‘YES’. Can’t fight the system.",
-        "Loading your yes… 99%… 100%… done.",
-        "Plot armor says you end up saying yes anyway."
+      redirect: [
+        "Cute question—but first: say yes to the boy who made this for you.",
+        "I hear you. Also: the boy who made this for you hopes for a yes.",
+        "Fair point. Now… about saying yes to the boy who made this for you?",
+        "Got it! Meanwhile, the boy who made this for you is cheering for a yes.",
+        "We can talk about that—after you say yes to the boy who made this for you.",
+        "Noted. Quick detour: a yes for the boy who made this for you?",
+        "Love that thought. Love ‘yes’ even more—for the boy who made this for you.",
+        "Hmm… intriguing. Also: yes would make the boy who made this for you very happy.",
+        "Answer logged. Now log a yes—for the boy who made this for you.",
+        "Fun topic! Bonus level unlocks when you say yes to the boy who made this for you." 
       ],
-      dramatic: [
-        "In a world of maybes, be the YES.",
-        "Summoning the council of feelings… verdict: 💍.",
-        "Cue the violins—YES is the melody.",
-        "Destiny speed-ran to ‘yes’. Any objections?"
+      funny: [
+        "Breaking: experts recommend saying yes 100% of the time in this exact scenario.",
+        "I ran the numbers: yes wins by a landslide.",
+        "Auto‑correct changed ‘maybe’ to ‘yes’. I don’t make the rules.",
+        "If this were multiple choice, ‘yes’ would be all four options.",
+        "Plot twist: the right answer was yes the whole time.",
+        "Science confirms: yes increases happiness by 999%.",
+        "New patch notes: ‘No’ has been nerfed. Please select ‘Yes’.",
+        "Loading your yes… 100% complete.",
+        "Captcha check: select all squares that contain ‘yes’.",
+        "Compatibility check passed: recommend → yes." 
       ],
       overriders: {
-        yes: ["She said YES (manifesting). Screenshot this. 🎉", "YES energy detected. Deploying heart confetti! 💗"],
-        maybe: ["That’s yes in slow motion. I’ll wait. 🐢💗"],
-        no: ["Error 403: ‘No’ not permitted on this domain 😌"],
-        why: ["Because your smile rhymes with ‘yes’. Case closed."],
+        yes: [
+          "You said the magic word. Confetti time! 🎉 Yes, yes, yes!",
+          "YES detected. Best decision of the day. 💗",
+          "Yes confirmed. Deploying heart confetti! 💞"
+        ],
+        maybe: [
+          "‘Maybe’ is just ‘yes’ getting ready. I’ll wait right here.",
+          "Sounds like a soft yes. Let’s make it official?",
+          "Maybe today, definitely yes tomorrow—why not now?"
+        ],
+        no: [
+          "‘No’ not accepted—please try ‘yes’.",
+          "404: ‘no’ not found. Replace with ‘yes’.",
+          "System hint: kindness to yourself = say yes."
+        ],
+        why: [
+          "Because you deserve a beautiful story—start with yes.",
+          "Because the good things want you—begin with yes.",
+          "Because your heart already knows—just say yes."
+        ]
       }
     };
 
     function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
     function weightedPick(){
-      // 60% romantic, 30% tease, 10% dramatic
       const r = Math.random();
-      if (r < 0.6) return pick(POOLS.romantic);
-      if (r < 0.9) return pick(POOLS.tease);
-      return pick(POOLS.dramatic);
+      if (r < 0.7) return pick(POOLS.persuade);   // 70%
+      if (r < 0.9) return pick(POOLS.redirect);   // 20%
+      return pick(POOLS.funny);                    // 10%
     }
 
     function detect(text){
@@ -258,7 +301,8 @@
         const pool = POOLS.overriders[d.type];
         text = Array.isArray(pool) ? pick(pool) : weightedPick();
       } else {
-        text = weightedPick();
+        // 50/50: persuade vs redirect to steer the convo
+        text = Math.random() < 0.5 ? pick(POOLS.persuade) : pick(POOLS.redirect);
       }
 
       const temp = appendMsg('bot', 'Typing…', true);
