@@ -20,43 +20,37 @@
     .logo span:nth-child(5){color:#0F9D58}
     .logo span:nth-child(6){color:#DB4437}
 
-    .search{
-      margin:22px auto 0; display:flex; align-items:center; gap:10px; padding:12px 16px;
+    .search{ margin:22px auto 0; display:flex; align-items:center; gap:10px; padding:12px 16px;
       border:1px solid #dadce0; border-radius:999px; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,.06);
-      transition:box-shadow .15s ease, transform .15s ease;
-    }
+      transition:box-shadow .15s ease, transform .15s ease; }
     .search:focus-within{ box-shadow:0 10px 24px rgba(0,0,0,.12); transform:translateY(-1px); }
     .search input{flex:1; border:0; outline:none; font-size:16px; padding:6px 4px}
     .btns{display:flex; justify-content:center; gap:10px; margin-top:24px; flex-wrap:wrap}
-    button{
-      border:1px solid #f1f3f4; background:#f8f9fa; padding:10px 18px; border-radius:8px; cursor:pointer; font-size:14px;
-      transition:transform .02s ease, background .15s ease, border-color .15s ease;
-    }
+    button{ border:1px solid #f1f3f4; background:#f8f9fa; padding:10px 18px; border-radius:8px; cursor:pointer; font-size:14px;
+      transition:transform .02s ease, background .15s ease, border-color .15s ease; }
     button:hover{background:#f1f3f4; border-color:#dadce0}
     button:active{transform:translateY(1px)}
     .hint{margin-top:10px; font-size:12px; color:#5f6368}
 
     /* Modal */
-    dialog{
-      border:none; padding:0; border-radius:16px; box-shadow:var(--shadow); width:min(560px,92vw); overflow:hidden;
-      animation:pop .18s ease-out;
-    }
-    @keyframes pop{from{transform:scale(.96); opacity:.0} to{transform:scale(1); opacity:1}}
-    .modal{padding:28px 26px}
-    .modal h1{margin:0 0 6px; font-size:clamp(24px,4.5vw,34px)}
-    .modal p{margin:8px 0 0; color:#5f6368}
-    .rec-box{
-      margin-top:16px; padding:14px; border:1px dashed #e0e3e7; border-radius:12px; background:#fbfcff;
-    }
-    .rec{font-size:18px}
-    .actions{margin-top:16px; display:flex; gap:8px; justify-content:center}
-    .ok{background:var(--blue); color:#fff; border-color:var(--blue)}
-    .ghost{background:#fff}
-    .heart{display:inline-block; margin-left:6px; animation:beat 1.2s infinite}
+    dialog{ border:none; padding:0; border-radius:16px; box-shadow:var(--shadow); width:min(560px,92vw); overflow:hidden; }
+    .modal{ display:flex; flex-direction:column; height:min(70vh, 640px); }
+    .modal-header{ padding:16px 18px; border-bottom:1px solid #eceff1; display:flex; align-items:center; justify-content:space-between; }
+    .modal-header h1{ margin:0; font-size:18px; font-weight:700; display:flex; align-items:center; gap:8px }
+    .modal-header .heart{ animation:beat 1.2s infinite }
     @keyframes beat{0%,100%{transform:scale(1)} 50%{transform:scale(1.12)}}
-    .footer-note{font-size:12px; color:#9aa0a6; margin-top:14px}
 
-    /* Tiny confetti */
+    .chat{ flex:1; overflow:auto; padding:14px 14px 8px; background:#fbfcff }
+    .msg{ max-width:80%; margin:8px 0; padding:10px 12px; border-radius:14px; font-size:14px; line-height:1.35; box-shadow:0 1px 2px rgba(0,0,0,.06); }
+    .me{ margin-left:auto; background:#e8f0fe; border:1px solid #d2e3fc; }
+    .bot{ margin-right:auto; background:#fff; border:1px solid #e5e7eb; }
+    .thinking{ color:#9aa0a6; font-style:italic }
+
+    .composer{ display:flex; gap:8px; padding:12px; border-top:1px solid #eceff1; background:#fff }
+    .composer input{ flex:1; padding:10px 12px; border:1px solid #e5e7eb; border-radius:12px; outline:none; font-size:14px }
+    .composer button{ border:1px solid #e5e7eb; background:#f8f9fa; border-radius:10px; padding:10px 14px; }
+
+    /* Confetti */
     .confetti{position:fixed; inset:0; pointer-events:none}
     .confetti i{position:absolute; width:8px; height:14px; opacity:0; transform:translateY(-20px) rotate(0deg)}
   </style>
@@ -75,7 +69,7 @@
         <button type="submit">Google Search</button>
         <button type="button" id="lucky">I'm Feeling Lucky</button>
       </div>
-      <div class="hint">Type anything. I’ll echo it and give a playful recommendation 💘</div>
+      <div class="hint">Type anything. We’ll open a playful chat that nudges you toward YES 💘</div>
       <div class="hint" id="statusLine" aria-live="polite"></div>
       <div style="margin-top:8px">
         <button type="button" id="testWrite" style="font-size:12px;border:1px solid #e5e7eb;padding:6px 10px;border-radius:6px;background:#fff;cursor:pointer">Run Firestore test write</button>
@@ -85,216 +79,256 @@
 
   <dialog id="resultDialog">
     <div class="modal">
-      <h1 id="headline">Here’s my take <span class="heart">💙</span></h1>
-      <p id="youSearched"></p>
-      <div class="rec-box">
-        <div class="rec" id="recommendation"></div>
+      <div class="modal-header">
+        <h1>not-google chat <span class="heart">💙</span></h1>
+        <button id="closeModal" title="Close" style="border:0;background:transparent;font-size:18px;cursor:pointer">✖</button>
       </div>
-      <div class="actions">
-        <button class="ok" id="closeModal">OK</button>
-        <button class="ghost" id="openNewPage">Open as new page</button>
+      <div id="chat" class="chat" aria-live="polite"></div>
+      <div class="composer">
+        <input id="chatInput" type="text" placeholder="Type a reply…"/>
+        <button id="sendBtn">Send</button>
       </div>
-      <div class="footer-note">Tip: try words like “yes”, “love”, “marry” 😉</div>
     </div>
   </dialog>
   <div class="confetti" id="confetti"></div>
 
-  <!-- Firebase: log each search to Firestore -->
+  <!-- Firebase: log initial search + chat turns to Firestore -->
   <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
-  import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp, doc } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBmR-D0xa8c_wh2vS7uPw1FwL_7-fN8Xjo",
-    authDomain: "hope-6fe19.firebaseapp.com",
-    projectId: "hope-6fe19",
-    storageBucket: "hope-6fe19.firebasestorage.app",
-    messagingSenderId: "605032966039",
-    appId: "1:605032966039:web:122b19f529e5db9ee7c6d2",
-    measurementId: "G-S8G7B4EY5T"
-  };
+    const firebaseConfig = {
+      apiKey: "AIzaSyBmR-D0xa8c_wh2vS7uPw1FwL_7-fN8Xjo",
+      authDomain: "hope-6fe19.firebaseapp.com",
+      projectId: "hope-6fe19",
+      storageBucket: "hope-6fe19.firebasestorage.app",
+      messagingSenderId: "605032966039",
+      appId: "1:605032966039:web:122b19f529e5db9ee7c6d2",
+      measurementId: "G-S8G7B4EY5T"
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const auth = getAuth(app);
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
+    const auth = getAuth(app);
 
-  // Anonymous authentication with clear logging
-  signInAnonymously(auth)
-    .then(() => console.log('✅ Firebase: Signed in anonymously.'))
-    .catch(error => console.error('❌ Firebase Auth Error:', error));
+    signInAnonymously(auth)
+      .then(()=>console.log('✅ Firebase: Signed in anonymously.'))
+      .catch(err=>console.error('❌ Firebase Auth Error:', err));
+    onAuthStateChanged(auth,u=>{ if(u) console.log('👤 Firebase UID:', u.uid); });
 
-  // Log user info when ready
-  onAuthStateChanged(auth, (user) => {
-    if (user) console.log('👤 Firebase user UID:', user.uid);
-  });
+    // Simple session id for this page load
+    function uuid(){ if (crypto?.randomUUID) return crypto.randomUUID(); return 'xxxxxxx'.replace(/x/g,()=>Math.random().toString(16).slice(2,3)); }
+    const sessionId = uuid();
 
-  console.log('Firebase init complete for project:', firebaseConfig.projectId, 'authDomain:', firebaseConfig.authDomain);
-
-  // Firestore write with better logs
-  window.logSearchToFirestore = async function(text) {
-    const clean = (text || '').toString().slice(0, 300);
-    if (!clean) return;
-
-    try {
-      const ref = await addDoc(collection(db, 'searches'), {
-        text: clean,
-        ua: navigator.userAgent || '',
-        ts: serverTimestamp()
-      });
-      console.log('✅ Firestore: Logged search:', clean, '→ doc ID:', ref.id);
-    } catch (e) {
-      console.error('❌ Firestore write failed:', e);
+    // Firestore helpers
+    async function logSessionStart(initialQuery){
+      try{
+        const ref = await addDoc(collection(db, 'sessions'), {
+          sessionId,
+          initialQuery,
+          ua: navigator.userAgent || '',
+          createdAt: serverTimestamp()
+        });
+        console.log('✅ Firestore: session started id=', ref.id);
+        return ref.id;
+      }catch(e){ console.error('❌ Firestore session start failed:', e); return null; }
     }
-  };
-</script>
 
-<script>
-  window.addEventListener('error', e => console.error('Window error:', e.message));
-  window.addEventListener('unhandledrejection', e => console.error('Unhandled promise rejection:', e.reason));
-</script>
+    async function logMessage(sessionDocId, role, text){
+      try{
+        const ref = await addDoc(collection(db, 'sessions', sessionDocId, 'messages'), {
+          role, text, ts: serverTimestamp()
+        });
+        console.log(`✅ Firestore: logged ${role} message`, ref.id);
+      }catch(e){ console.error('❌ Firestore message log failed:', e); }
+    }
+
+    // Expose to window for the non-module script
+    window.__db = { logSessionStart, logMessage };
+  </script>
 
   <script>
-    // --- Funny rotating recommendations (no repeat until all used) ---
-    const BASE_RECS = [
-      "Yes—you should. Like, absolutely. ✅",
-      "Do it. He’s a good guy. The best, actually. 😌",
-      "A gentle nudge: say yes. Your future self says thanks. 💌",
-      "Green flag detected. Proceed with maximum cuteness. 🟢",
-      "Consider this an official approval stamp: YES. ✍️",
-      "Plot twist: you already knew the answer. It’s yes. 😉",
-      "Zero doubts. 100% yes. Science agrees. 🔬✨",
-      "Breaking news: Hearts vote YES by unanimous decision. 🗳️❤️",
-      "Yes, you should—hurry before you miss the train of destiny. 🚆",
-      "Statistically speaking, yes increases happiness by 1000%. 📈"
-    ];
-    const SPECIAL_RECS = [
-      "She said yes (manifesting). Cue confetti! 🎉",
-      "Ring the bells—YES energy detected! 🔔💍",
-      "Certified YES moment. Screenshot this. 🧾"
-    ];
-    let recPool = shuffle([...BASE_RECS]);
-
-    function shuffle(arr){
-      for(let i=arr.length-1;i>0;i--){
-        const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]];
+    // Pools
+    const POOLS = {
+      romantic: [
+        "Plot twist: your heart already decided. It whispered ‘yes’.",
+        "If smiles were votes, ‘yes’ just won by a landslide.",
+        "I checked destiny’s logs—status: ‘YES confirmed’.",
+        "Today’s forecast: 100% chance of YES showers."
+      ],
+      tease: [
+        "That ‘maybe’ sounds like ‘yes’ wearing pajamas.",
+        "Auto-correct changed ‘no’ → ‘YES’. Can’t fight the system.",
+        "Loading your yes… 99%… 100%… done.",
+        "Plot armor says you end up saying yes anyway."
+      ],
+      dramatic: [
+        "In a world of maybes, be the YES.",
+        "Summoning the council of feelings… verdict: 💍.",
+        "Cue the violins—YES is the melody.",
+        "Destiny speed-ran to ‘yes’. Any objections?"
+      ],
+      overriders: {
+        yes: ["She said YES (manifesting). Screenshot this. 🎉", "YES energy detected. Deploying heart confetti! 💗"],
+        maybe: ["That’s yes in slow motion. I’ll wait. 🐢💗"],
+        no: ["Error 403: ‘No’ not permitted on this domain 😌"],
+        why: ["Because your smile rhymes with ‘yes’. Case closed."],
       }
-      return arr;
-    }
-    function nextRec(q=""){
-      const t = (q||"").toLowerCase();
-      // Easter eggs
-      if (/(^|\b)(yes|marry|love|proposal|accept)\b/.test(t)) {
-        return SPECIAL_RECS[Math.floor(Math.random()*SPECIAL_RECS.length)];
-      }
-      if (recPool.length===0) recPool = shuffle([...BASE_RECS]);
-      return recPool.pop();
+    };
+
+    function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
+    function weightedPick(){
+      // 60% romantic, 30% tease, 10% dramatic
+      const r = Math.random();
+      if (r < 0.6) return pick(POOLS.romantic);
+      if (r < 0.9) return pick(POOLS.tease);
+      return pick(POOLS.dramatic);
     }
 
-    // Tiny confetti without libs
-    function confettiBurst(){
+    function detect(text){
+      const t = (text||'').toLowerCase();
+      if (/(^|\b)(yes|love|marry|engage|proposal|accept)\b/.test(t)) return {type:'yes'};
+      if (/(^|\b)(maybe|idk|not sure|hmm)\b/.test(t)) return {type:'maybe'};
+      if (/(^|\b)(no|never)\b/.test(t)) return {type:'no'};
+      if (/(^|\b)(why|reason)\b/.test(t)) return {type:'why'};
+      return {type:'none'};
+    }
+
+    // Typewriter
+    function typewrite(el, text, speed=32){
+      el.textContent='';
+      let i=0; const timer=setInterval(()=>{
+        el.textContent += text.charAt(i++);
+        if (i>=text.length) clearInterval(timer);
+      }, speed);
+    }
+
+    // Confetti
+    function confettiBurst(hearts=false){
       const box = document.getElementById('confetti');
       if(!box) return;
-      for(let i=0;i<36;i++){
+      const colors = hearts ? ['#ff2d55','#ff375f','#ff9f0a','#ff453a'] : ['#4285F4','#DB4437','#F4B400','#0F9D58'];
+      for(let i=0;i<40;i++){
         const p = document.createElement('i');
         const x = Math.random()*100;
-        const dur = 800 + Math.random()*900;
+        const dur = 900 + Math.random()*900;
         const rot = Math.random()*360;
         p.style.left = x + 'vw';
         p.style.top = '-10px';
         p.style.opacity = '1';
-        p.style.background = ['#4285F4','#DB4437','#F4B400','#0F9D58'][i%4];
+        p.style.background = colors[i%colors.length];
+        p.style.borderRadius = hearts ? '4px 4px 8px 8px' : '2px';
         p.animate([
           { transform:`translateY(-20px) rotate(${rot}deg)`, opacity:1 },
           { transform:`translateY(120vh) rotate(${rot+220}deg)`, opacity:0.7 }
         ], { duration: dur, easing: 'cubic-bezier(.2,.7,.2,1)'});
         box.appendChild(p);
-        setTimeout(()=>box.removeChild(p), dur+50);
+        setTimeout(()=>box.removeChild(p), dur+60);
       }
     }
 
-    // Existing elements
+    // DOM
     const form = document.getElementById('searchForm');
     const input = document.getElementById('q');
     const dialog = document.getElementById('resultDialog');
-    const youSearched = document.getElementById('youSearched');
-    const recommendation = document.getElementById('recommendation');
+    const chatEl = document.getElementById('chat');
     const closeModal = document.getElementById('closeModal');
-    const openNewPageBtn = document.getElementById('openNewPage');
+    const sendBtn = document.getElementById('sendBtn');
+    const chatInput = document.getElementById('chatInput');
     const statusLine = document.getElementById('statusLine');
     const testWriteBtn = document.getElementById('testWrite');
 
-    function showResult(q){
-      const text = (q||'').trim();
-      if(!text) { input.focus(); return; }
-
-      // Firestore logging (non-blocking)
-      if (window.logSearchToFirestore) {
-        window.logSearchToFirestore(text)
-          .then(() => status('Saved to Firestore'))
-          .catch(err => status('Firestore error: ' + (err && err.message || 'see console')));
-      } else {
-        status('Firestore not ready (window.logSearchToFirestore missing)');
-      }
-
-      // Fill modal
-      youSearched.textContent = `You searched: “${text}”`;
-      recommendation.textContent = `My recommendation: ${nextRec(text)}`;
-
-      try {
-        if (dialog && typeof dialog.showModal === 'function') {
-          dialog.showModal();
-          confettiBurst();
-          status('Modal opened');
-        } else {
-          throw new Error('dialog.showModal not available');
-        }
-      } catch (err) {
-        console.warn('dialog.showModal failed, using fallback page:', err);
-        status('Opening fallback page');
-        openNewPage(text);
-      }
-    }
-
-    function openNewPage(q){
-      const win = window.open('', '_blank');
-      if (!win) return alert('Pop-up blocked. Allow pop-ups for this site.');
-      const safeQ = (q||'').replace(/[&<>]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[s]));
-      const msg = nextRec(q);
-      const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Result</title>
-  <style>
-    body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:#fff;color:#202124}
-    .box{text-align:center;padding:28px}
-    h1{font-size:clamp(28px,6vw,46px);margin:0 0 10px}
-    p{color:#5f6368;margin:4px 0}
-    .rec{margin-top:10px;font-size:18px}
-  </style>
-</head>
-<body>
-  <div class="box">
-    <h1>Here’s my take 💙</h1>
-    <p>You searched: “${safeQ}”</p>
-    <p class="rec">My recommendation: ${msg}</p>
-  </div>
-</body>
-</html>`;
-      win.document.open();
-      win.document.write(html);
-      win.document.close();
-    }
-
     function status(msg){ if(statusLine) statusLine.textContent = msg; console.log('[status]', msg); }
 
+    let sessionDocId = null;
+    function appendMsg(role, text, typing=false){
+      const div = document.createElement('div');
+      div.className = 'msg ' + (role==='user'?'me':'bot') + (typing?' thinking':'');
+      div.textContent = text;
+      chatEl.appendChild(div);
+      chatEl.scrollTop = chatEl.scrollHeight;
+      return div;
+    }
+
+    async function botReply(userText){
+      const d = detect(userText);
+      let text;
+      if (d.type !== 'none') {
+        const pool = POOLS.overriders[d.type];
+        text = Array.isArray(pool) ? pick(pool) : weightedPick();
+      } else {
+        text = weightedPick();
+      }
+
+      const temp = appendMsg('bot', 'Typing…', true);
+      await new Promise(r=>setTimeout(r, 500 + Math.random()*600));
+      temp.classList.remove('thinking');
+      typewrite(temp, text, 26);
+
+      if (d.type === 'yes') confettiBurst(true);
+
+      if (window.__db?.logMessage && sessionDocId) {
+        window.__db.logMessage(sessionDocId, 'bot', text);
+      }
+    }
+
+    async function startChat(initialQuery){
+      // Start session in Firestore (one per modal open)
+      if (!sessionDocId && window.__db?.logSessionStart) {
+        sessionDocId = await window.__db.logSessionStart(initialQuery);
+      }
+
+      chatEl.innerHTML = '';
+      appendMsg('bot', 'Analyzing heartbeats…');
+      await new Promise(r=>setTimeout(r, 350));
+      appendMsg('bot', 'Computing destiny…');
+      await new Promise(r=>setTimeout(r, 350));
+      await botReply(initialQuery);
+    }
+
+    async function handleUserSend(){
+      const text = (chatInput.value||'').trim();
+      if(!text) return;
+      appendMsg('user', text);
+      chatInput.value = '';
+      if (window.__db?.logMessage && sessionDocId) {
+        window.__db.logMessage(sessionDocId, 'user', text);
+      }
+      await botReply(text);
+    }
+
+    function showChat(q){
+      const text = (q||'').trim();
+      if(!text) { input.focus(); return; }
+      if (typeof dialog.showModal === 'function') dialog.showModal();
+      else alert('Your browser does not support <dialog>');
+      startChat(text);
+      status('Chat opened');
+    }
+
+    // Search form
+    form.addEventListener('submit', e => { e.preventDefault(); showChat(input.value); });
+    document.getElementById('lucky').addEventListener('click', () => showChat(input.value || 'Feeling lucky'));
+
+    // Chat events
+    sendBtn.addEventListener('click', handleUserSend);
+    chatInput.addEventListener('keydown', e=>{ if(e.key==='Enter') handleUserSend(); });
+
+    // Close
+    closeModal.addEventListener('click', () => { dialog.close(); });
+    dialog.addEventListener('close', () => { input.focus(); });
+
+    // Diagnostic Firestore write
     if (testWriteBtn) {
       testWriteBtn.addEventListener('click', async () => {
         try {
-          if (window.logSearchToFirestore) {
-            await window.logSearchToFirestore('diagnostic test');
+          if (window.__db?.logSessionStart) {
+            const id = await window.__db.logSessionStart('diagnostic test');
+            if (id && window.__db?.logMessage) {
+              await window.__db.logMessage(id, 'user', 'diag user');
+              await window.__db.logMessage(id, 'bot', 'diag bot');
+            }
             status('Diagnostic write OK');
           } else {
             status('Diagnostic: Firestore logger not available');
@@ -305,12 +339,11 @@
         }
       });
     }
+  </script>
 
-    form.addEventListener('submit', e => { e.preventDefault(); showResult(input.value); });
-    document.getElementById('lucky').addEventListener('click', () => showResult(input.value || 'Feeling lucky'));
-    closeModal.addEventListener('click', () => dialog.close());
-    openNewPageBtn.addEventListener('click', () => { dialog.close(); openNewPage(input.value); });
-    dialog.addEventListener('close', () => { input.focus(); });
+  <script>
+    window.addEventListener('error', e => console.error('Window error:', e.message));
+    window.addEventListener('unhandledrejection', e => console.error('Unhandled promise rejection:', e.reason));
   </script>
 </body>
 </html>
